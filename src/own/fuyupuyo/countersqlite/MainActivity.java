@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -20,15 +19,26 @@ public class MainActivity extends Activity implements OnMenuItemClickListener {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setView();
+		getNumFromDB();
+		setNumText();
+	}
+
+	private void setView() {
 		setContentView(R.layout.activity_main);
+		mNum = (TextView) findViewById(R.id.text_num);
+	}
+
+	private void getNumFromDB() {
 		NumOpenHelper dbHelper = new NumOpenHelper(this);
 		db = dbHelper.getWritableDatabase();
 		Cursor c = db.rawQuery("select num from num", null);
 		c.moveToFirst();
-		mNum = (TextView) findViewById(R.id.text_num);
 		num = new Num(c.getInt(0));
-		Log.d("test", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" + num.get());
-		setNum();
+	}
+
+	public void setNumText() {
+		mNum.setText(num.toString());
 	}
 
 	@Override
@@ -39,15 +49,11 @@ public class MainActivity extends Activity implements OnMenuItemClickListener {
 		return true;
 	}
 
-	public void setNum() {
-		mNum.setText(num.toString());
-	}
-
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
 			num.add();
-			setNum();
+			setNumText();
 		}
 		return true;
 	}
@@ -61,7 +67,7 @@ public class MainActivity extends Activity implements OnMenuItemClickListener {
 		switch (item.getItemId()) {
 		case R.id.action_reset:
 			num.reset();
-			setNum();
+			setNumText();
 			break;
 
 		default:
@@ -71,8 +77,7 @@ public class MainActivity extends Activity implements OnMenuItemClickListener {
 	}
 
 	@Override
-	protected void onDestroy() {
-		Log.d("test", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" + num.get());
+	protected void onStop() {
 		ContentValues values = new ContentValues();
 		values.put("num", num.get());
 		db.update("num", values, null, null);
